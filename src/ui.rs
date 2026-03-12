@@ -145,11 +145,12 @@ impl CouponApp {
                 // Export
                 match export_to_excel(&coupons, output_dir, base_name, max_per_file) {
                     Ok(files) => {
+                        let target_folder = output_dir.join(base_name);
                         self.status_message = format!(
-                            "Done! {} coupons saved to {} file(s) in {}.",
+                            "Done! {} coupons saved to {} file(s) in {}",
                             coupons.len(),
                             files.len(),
-                            output_dir.display()
+                            target_folder.display()
                         );
                     }
                     Err(e) => {

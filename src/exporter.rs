@@ -30,8 +30,13 @@ pub fn export_to_excel(
     base_name: &str,
     max_per_file: usize,
 ) -> Result<Vec<String>, ExportError> {
+    // ── Create a subfolder named after the base coupon code ──
+    let target_dir = output_dir.join(base_name);
+    std::fs::create_dir_all(&target_dir)
+        .map_err(|e| ExportError::IoError(e.to_string()))?;
+
     // ── Split into chunks ───────────────────────────────────
-    // If the list is empty, we still produce one file (with just a header).
+    // If the list is empty, we still produce one file.
     // Otherwise, chunk into groups of max_per_file.
     let chunks: Vec<&[String]> = if coupons.is_empty() {
         vec![&[]]
@@ -48,7 +53,7 @@ pub fn export_to_excel(
         let batch_number = index + 1;
         let file_name = format!("{}_{}_{}.xlsx", today, base_name, batch_number);
 
-        let full_path = output_dir.join(&file_name);
+        let full_path = target_dir.join(&file_name);
 
         // ── Create workbook and worksheet ───────────────────
         let mut workbook = Workbook::new();
