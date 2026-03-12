@@ -53,7 +53,7 @@ Generated files are saved to the directory you selected, with the naming convent
 - `2026-03-12_COUPON_1.xlsx`
 - `2026-03-12_COUPON_2.xlsx`
 
-Each file contains one coupon code per row, with no header row. If your total count exceeds the **Max Codes per File** threshold, the coupons are automatically split across multiple numbered files.
+Each file starts with a first-row header named `codes`, followed by one coupon code per row. If your total count exceeds the **Max Codes per File** threshold, the coupons are automatically split across multiple numbered files.
 These files are ready to import in S4D's Admin in the coupons > single use coupons > import section.
 
 ## Post Generation: Upload coupon codes to the S4D Admin
@@ -82,8 +82,8 @@ src/
 ├── generator.rs   # Core: parallel coupon generation with uniqueness
 └── exporter.rs    # I/O: splits coupons into batched Excel files
 tests/
-├── generator_tests.rs   # 14 tests covering happy path, errors, perf
-└── exporter_tests.rs    # 8 tests covering file splitting & naming
+├── generator_tests.rs   # 16 tests covering happy path, errors, perf
+└── exporter_tests.rs    # 12 tests covering splitting, naming, and workbook contents
 ```
 
 **Data flow:** `UI (ui.rs)` → `Generator (generator.rs)` → `Exporter (exporter.rs)` → `.xlsx` files on disk.
@@ -113,6 +113,7 @@ tests/
 #### `exporter.rs`
 - **`export_to_excel(coupons, output_dir, base_name, max_per_file)`** — Splits the coupon list into chunks and writes each chunk to a separate `.xlsx` file.
 - Files are named `{date}_{base_name}_{batch}.xlsx`.
+- Each worksheet writes `codes` in the first row, then coupon values below it.
 
 #### `ui.rs`
 - `CouponApp` struct holds all UI state (prefix, counts, output directory, status).
@@ -152,12 +153,12 @@ cargo xwin build --release --target x86_64-pc-windows-msvc
 
 ### Testing
 
-The project has **22 tests** across two test files:
+The project has **28 tests** across two test files:
 
 | File                    | Tests | Coverage                                    |
 |-------------------------|-------|---------------------------------------------|
-| `generator_tests.rs`    | 14    | Correctness, uniqueness, prefix handling, edge cases, performance (50K & 10M codes) |
-| `exporter_tests.rs`     | 8     | File splitting, naming convention, empty input, file existence |
+| `generator_tests.rs`    | 16    | Correctness, uniqueness, prefix handling, edge cases, performance (50K & 10M codes) |
+| `exporter_tests.rs`     | 12    | File splitting, naming convention, empty input, file existence, workbook headers |
 
 Run all tests:
 

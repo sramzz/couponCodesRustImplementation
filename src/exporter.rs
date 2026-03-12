@@ -15,7 +15,7 @@ pub enum ExportError {
 ///
 /// - Each file contains at most `max_per_file` coupons.
 /// - File naming: `{date}_{base_name}_{batch_number}.xlsx`, where `date` is today's date.
-/// - No header row is included; the file only contains coupon codes starting from the first row.
+/// - Each file starts with a `codes` header row, followed by coupon codes.
 ///
 /// Returns a list of file paths that were created.
 ///
@@ -59,10 +59,14 @@ pub fn export_to_excel(
         let mut workbook = Workbook::new();
         let worksheet = workbook.add_worksheet();
 
-        // Write each coupon on its own row (row 0, 1, 2, ...)
+        worksheet
+            .write_string(0, 0, "codes")
+            .map_err(|e| ExportError::XlsxError(e.to_string()))?;
+
+        // Write each coupon on its own row below the header.
         for (row, coupon) in chunk.iter().enumerate() {
             worksheet
-                .write_string(row as u32, 0, coupon)
+                .write_string((row + 1) as u32, 0, coupon)
                 .map_err(|e| ExportError::XlsxError(e.to_string()))?;
         }
 

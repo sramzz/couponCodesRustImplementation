@@ -1,6 +1,7 @@
 use dashmap::DashSet;
-use rayon::prelude::*;
 use rand::RngExt;
+use rayon::prelude::*;
+use std::collections::HashSet;
 
 /// Every coupon code is exactly this many characters.
 pub const COUPON_LENGTH: usize = 10;
@@ -21,6 +22,58 @@ pub enum GeneratorError {
     ZeroCount,
     /// Couldn't generate enough unique coupons within the attempt limit.
     MaxAttemptsExceeded,
+}
+
+fn suffix_capacity(random_len: usize) -> u128 {
+    let mut capacity = 1u128;
+
+    for _ in 0..random_len {
+        capacity = capacity.saturating_mul(CHARSET.len() as u128);
+    }
+
+    capacity
+}
+
+fn encode_suffix(mut index: u128, random_len: usize) -> String {
+    let mut suffix = vec![CHARSET[0]; random_len];
+    let base = CHARSET.len() as u128;
+
+    for position in (0..random_len).rev() {
+        let digit = (index % base) as usize;
+        suffix[position] = CHARSET[digit];
+        index /= base;
+    }
+
+    String::from_utf8(suffix).expect("CHARSET only contains ASCII characters")
+}
+
+fn sample_unique_suffix_indices(space_size: u128, count: usize) -> Vec<u128> {
+    let mut rng = rand::rng();
+    let mut selected = HashSet::with_capacity(count);
+    let start = space_size - count as u128;
+
+    for current in start..space_size {
+        let candidate = rng.random_range(0..=current);
+        if !selected.insert(candidate) {
+            selected.insert(current);
+        }
+    }
+
+    selected.into_iter().collect()
+}
+
+fn generate_near_capacity_coupons(
+    prefix_upper: &str,
+    random_len: usize,
+    count: usize,
+    suffix_space: u128,
+) -> Vec<String> {
+    let suffix_indices = sample_unique_suffix_indices(suffix_space, count);
+
+    suffix_indices
+        .into_par_iter()
+        .map(|index| format!("{}{}", prefix_upper, encode_suffix(index, random_len)))
+        .collect()
 }
 
 /// Generates `count` unique coupon codes with the given `prefix`.
@@ -51,6 +104,21 @@ pub fn generate_coupons(
 
     // ── Setup ───────────────────────────────────────────────
     let random_len = COUPON_LENGTH - prefix_upper.len();
+    let suffix_space = suffix_capacity(random_len);
+
+    if count as u128 > suffix_space {
+        return Err(GeneratorError::MaxAttemptsExceeded);
+    }
+
+    if (count as u128).saturating_mul(2) >= suffix_space {
+        return Ok(generate_near_capacity_coupons(
+            &prefix_upper,
+            random_len,
+            count,
+            suffix_space,
+        ));
+    }
+
     let set: DashSet<String> = DashSet::new();
     let max_total_attempts = count * MAX_ATTEMPTS_MULTIPLIER;
     let batch_size = count.max(1_024);
@@ -63,9 +131,10 @@ pub fn generate_coupons(
         }
 
         let needed = count - set.len();
+        let attempts_this_round = batch_size.min(needed * 2);
 
         // Generate candidates in parallel.
-        (0..batch_size.min(needed * 2))
+        (0..attempts_this_round)
             .into_par_iter()
             .for_each(|_| {
                 // Early exit: stop generating if we already have enough.
@@ -90,7 +159,7 @@ pub fn generate_coupons(
                 set.insert(coupon);
             });
 
-        total_attempts += batch_size;
+        total_attempts += attempts_this_round;
     }
 
     // ── Collect Results ─────────────────────────────────────

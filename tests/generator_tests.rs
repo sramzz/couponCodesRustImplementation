@@ -111,6 +111,20 @@ fn nine_character_prefix_leaves_one_random_character() {
     }
 }
 
+#[test]
+fn nine_character_prefix_can_generate_all_36_possible_codes() {
+    let coupons = generate_coupons("ABCDEFGHI", 36).unwrap();
+    assert_eq!(coupons.len(), 36);
+
+    let unique: HashSet<&String> = coupons.iter().collect();
+    assert_eq!(unique.len(), 36);
+
+    for coupon in &coupons {
+        assert!(coupon.starts_with("ABCDEFGHI"));
+        assert_eq!(coupon.len(), COUPON_LENGTH);
+    }
+}
+
 // ───────────────────────────────────────────────
 // ERROR CASE TESTS
 // ───────────────────────────────────────────────
@@ -132,6 +146,12 @@ fn prefix_longer_than_10_chars_returns_prefix_too_long_error() {
 fn zero_count_returns_zero_count_error() {
     let result = generate_coupons("SAN", 0);
     assert_eq!(result, Err(GeneratorError::ZeroCount));
+}
+
+#[test]
+fn requesting_more_than_36_codes_with_nine_character_prefix_returns_max_attempts_exceeded() {
+    let result = generate_coupons("ABCDEFGHI", 37);
+    assert_eq!(result, Err(GeneratorError::MaxAttemptsExceeded));
 }
 
 // ───────────────────────────────────────────────
