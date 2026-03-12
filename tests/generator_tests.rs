@@ -26,12 +26,12 @@ fn every_coupon_has_exactly_10_characters() {
 }
 
 #[test]
-fn every_coupon_starts_with_the_prefix_in_lowercase() {
+fn every_coupon_starts_with_the_prefix_in_uppercase() {
     let coupons = generate_coupons("ABC", 50).unwrap();
     for coupon in &coupons {
         assert!(
-            coupon.starts_with("abc"),
-            "Coupon '{}' does not start with 'abc'",
+            coupon.starts_with("ABC"),
+            "Coupon '{}' does not start with 'ABC'",
             coupon
         );
     }
@@ -51,12 +51,12 @@ fn all_coupons_in_a_batch_are_unique() {
 }
 
 #[test]
-fn coupons_contain_only_lowercase_letters_and_digits() {
+fn coupons_contain_only_uppercase_letters_and_digits() {
     let coupons = generate_coupons("SAN", 500).unwrap();
     for coupon in &coupons {
         for ch in coupon.chars() {
             assert!(
-                ch.is_ascii_lowercase() || ch.is_ascii_digit(),
+                ch.is_ascii_uppercase() || ch.is_ascii_digit(),
                 "Coupon '{}' contains invalid character '{}'",
                 coupon,
                 ch
@@ -67,13 +67,13 @@ fn coupons_contain_only_lowercase_letters_and_digits() {
 
 #[test]
 fn prefix_is_treated_as_case_insensitive() {
-    // "SAN", "san", "San" should all produce coupons starting with "san"
+    // "SAN", "san", "San" should all produce coupons starting with "SAN"
     for prefix in &["SAN", "san", "San", "sAn"] {
         let coupons = generate_coupons(prefix, 10).unwrap();
         for coupon in &coupons {
             assert!(
-                coupon.starts_with("san"),
-                "Prefix '{}' produced coupon '{}' — expected 'san' prefix",
+                coupon.starts_with("SAN"),
+                "Prefix '{}' produced coupon '{}' — expected 'SAN' prefix",
                 prefix,
                 coupon
             );
@@ -94,7 +94,7 @@ fn empty_prefix_generates_fully_random_coupons() {
 fn single_character_prefix_works() {
     let coupons = generate_coupons("X", 50).unwrap();
     for coupon in &coupons {
-        assert!(coupon.starts_with("x"));
+        assert!(coupon.starts_with("X"));
         assert_eq!(coupon.len(), COUPON_LENGTH);
     }
 }
@@ -102,11 +102,11 @@ fn single_character_prefix_works() {
 #[test]
 fn nine_character_prefix_leaves_one_random_character() {
     // Prefix "ABCDEFGHI" = 9 chars, leaving 1 random char.
-    // Only 36 possible unique coupons (a-z, 0-9).
+    // Only 36 possible unique coupons (A-Z, 0-9).
     let coupons = generate_coupons("ABCDEFGHI", 30).unwrap();
     assert_eq!(coupons.len(), 30);
     for coupon in &coupons {
-        assert!(coupon.starts_with("abcdefghi"));
+        assert!(coupon.starts_with("ABCDEFGHI"));
         assert_eq!(coupon.len(), COUPON_LENGTH);
     }
 }

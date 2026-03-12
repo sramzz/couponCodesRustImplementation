@@ -5,8 +5,8 @@ use rand::RngExt;
 /// Every coupon code is exactly this many characters.
 pub const COUPON_LENGTH: usize = 10;
 
-/// The pool of allowed characters: lowercase a-z and digits 0-9.
-pub const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyz0123456789";
+/// The pool of allowed characters: uppercase A-Z and digits 0-9.
+pub const CHARSET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 /// If we've tried this many times the batch size and still don't have
 /// enough unique coupons, something is wrong (prefix too long, etc).
@@ -26,7 +26,7 @@ pub enum GeneratorError {
 /// Generates `count` unique coupon codes with the given `prefix`.
 ///
 /// - Total coupon length is always `COUPON_LENGTH` (10).
-/// - The prefix is converted to lowercase.
+/// - The prefix is converted to uppercase.
 /// - The random portion uses characters from `CHARSET` (a-z, 0-9).
 /// - Generation is parallelized using `rayon`.
 /// - Uniqueness is enforced using a concurrent `DashSet`.
@@ -40,9 +40,9 @@ pub fn generate_coupons(
     count: usize,
 ) -> Result<Vec<String>, GeneratorError> {
     // ── Validation ──────────────────────────────────────────
-    let prefix_lower = prefix.to_ascii_lowercase();
+    let prefix_upper = prefix.to_ascii_uppercase();
 
-    if prefix_lower.len() >= COUPON_LENGTH {
+    if prefix_upper.len() >= COUPON_LENGTH {
         return Err(GeneratorError::PrefixTooLong);
     }
     if count == 0 {
@@ -50,7 +50,7 @@ pub fn generate_coupons(
     }
 
     // ── Setup ───────────────────────────────────────────────
-    let random_len = COUPON_LENGTH - prefix_lower.len();
+    let random_len = COUPON_LENGTH - prefix_upper.len();
     let set: DashSet<String> = DashSet::new();
     let max_total_attempts = count * MAX_ATTEMPTS_MULTIPLIER;
     let batch_size = count.max(1_024);
@@ -85,7 +85,7 @@ pub fn generate_coupons(
                     })
                     .collect();
 
-                let coupon = format!("{}{}", prefix_lower, random_part);
+                let coupon = format!("{}{}", prefix_upper, random_part);
 
                 set.insert(coupon);
             });
