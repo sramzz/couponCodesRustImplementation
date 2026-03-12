@@ -16,6 +16,8 @@ A high-performance desktop application for generating unique coupon codes and ex
 > **Core Objective:** Generate any number of unique, uppercase alphanumeric coupon codes and export them as organized Excel files — in seconds.
 
 The workflow is divided into three mutually exclusive stages: **Configure → Generate → Retrieve**.
+![alt text](image.png)
+![alt text](image-1.png)
 
 ### 1. Configure — Set Up Your Batch
 
@@ -54,6 +56,16 @@ Generated files are saved to the directory you selected, with the naming convent
 Each file contains one coupon code per row, with no header row. If your total count exceeds the **Max Codes per File** threshold, the coupons are automatically split across multiple numbered files.
 These files are ready to import in S4D's Admin in the coupons > single use coupons > import section.
 
+## Post Generation: Upload coupon codes to the S4D Admin
+
+1. Go to the S4D Admin panel.
+2. Navigate to the coupons section.
+3. Select the "Single Use Coupons" option.
+4. Click on the "Import" button.
+5. Upload the generated Excel file(s) one by one.
+
+![alt text](image-2.png)
+![alt text](image-3.png)
 ---
 
 ## Developer Documentation
